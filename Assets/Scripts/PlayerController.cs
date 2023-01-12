@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     public static PlayerController instance;
 
+    // Movement Variables
     public float moveSpeed;
     private Vector2 _moveInput;
 
