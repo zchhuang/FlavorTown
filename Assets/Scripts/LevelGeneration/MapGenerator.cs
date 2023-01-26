@@ -7,6 +7,7 @@ public class MapGenerator : MonoBehaviour
 {
     Vector2 worldSize = new Vector2(4, 4);
     Room[,] map;
+
     public GameObject layoutRoom;
     public Color startColor, endColor;
     public int distanceToEnd;
