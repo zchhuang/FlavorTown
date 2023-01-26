@@ -26,8 +26,10 @@ public class Enemy : MonoBehaviour
     // This needs to be marked virtual, so it can be properly overriden in specific enemy type subclasses.
     public virtual void Movement()
     {
+        // This ensures that the enemy will only move if visible on the screen
         if (sprite.isVisible)
         {
+            // This condition only allows the enemy to chase the player if within a certain range
             if (Vector3.Distance(transform.position, PlayerController.instance.transform.position) < rangeToChasePlayer)
             {
                 _moveDirection = PlayerController.instance.transform.position - transform.position;
@@ -41,6 +43,7 @@ public class Enemy : MonoBehaviour
             rigidBody.velocity = _moveDirection * moveSpeed;
         }
 
+        // Handles animation variable checking for movement
         if (_moveDirection != Vector3.zero)
         {
             anim.SetBool("isMoving", true);
