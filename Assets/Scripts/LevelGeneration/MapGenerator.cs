@@ -61,7 +61,7 @@ public class MapGenerator : MonoBehaviour
         usedPositions.Insert(0, Vector2.zero);
         Vector2 currentPos = Vector2.zero;
 
-        // These numbers I pulled from a github.  They're used to force branching later on in the map.
+        // These numbers I pulled from a github.  They're used to force branching later on in the map generation.
         float randomCompare = 0.2f, randomCompareStart = 0.2f, randomCompareEnd = 0.01f;
         for (int i = 0; i < numberOfRooms; i++)
         {
@@ -78,8 +78,6 @@ public class MapGenerator : MonoBehaviour
                     currentPos = SelectiveNewPosition();
                     iterations++;
                 }
-                if (iterations >= 20)
-                    print("error: could not create with fewer neighbors than : " + NumberOfNeighbors(currentPos));
             }
     
 
@@ -110,6 +108,7 @@ public class MapGenerator : MonoBehaviour
         return (!usedPositions.Contains(checkPos) && posX < gridSizeX && posX >= -gridSizeX && posY < gridSizeY && posY >= -gridSizeY); 
     }
 
+    // Gets a random adjacent position on the map grid, ignoring bounds.
     Vector2 GetRandomAdjacentPosition(Vector2 position) 
     {
         Vector2[] directions = new Vector2[4] { new Vector2(1, 0), new Vector2(-1, 0), new Vector2(0, 1), new Vector2(0, -1) };
@@ -152,8 +151,7 @@ public class MapGenerator : MonoBehaviour
             inc = 0;
             do
             {
-                //instead of getting a room to find an adject empty space, we start with one that only 
-                //as one neighbor. This will make it more likely that it returns a room that branches out
+                // Get a random room that has only one neighbor if possible
                 index = Mathf.RoundToInt(Random.value * (usedPositions.Count - 1));
                 inc++;
             } while (NumberOfNeighbors(usedPositions[index]) > 1 && inc < 100);
@@ -190,14 +188,7 @@ public class MapGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-#if UNITY_EDITOR
-        if (Input.GetKey(KeyCode.R))
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
-#endif
     }
-
 }
 
 [System.Serializable]
