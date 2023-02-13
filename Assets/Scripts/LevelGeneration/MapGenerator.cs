@@ -9,7 +9,7 @@ public class MapGenerator : MonoBehaviour
     Room[,] map;
 
     List<Vector2> usedPositions = new List<Vector2>();
-    int gridSizeX, gridSizeY, fullGridSizeX, fullGridSizeY, numberOfRooms = 12;
+    int gridSizeX, gridSizeY, fullGridSizeX, fullGridSizeY, numberOfRooms = 10;
 
     public GameObject layoutRoom;
     public Color startColor, endColor;
@@ -18,7 +18,9 @@ public class MapGenerator : MonoBehaviour
     public Transform generatorPoint;
 
     public float xOffset = 18f, yOffset = 10f;
-
+    public float xSize, ySize;
+    public GameObject wallBlock;
+    private List<GameObject> _roomWalls = new List<GameObject>();
     public LayerMask layerMask;
 
     // private GameObject _startRoom;
@@ -98,6 +100,7 @@ public class MapGenerator : MonoBehaviour
             int posX = (int) drawPos.x, posY = (int) drawPos.y;
             Vector2 roomCoords = new Vector2(posX * xOffset, posY * yOffset); 
             Instantiate(layoutRoom, roomCoords, Quaternion.identity).GetComponent<SpriteRenderer>().color = startColor;
+            GenerateWalls((float) 3.0, roomCoords, Quaternion.identity);
         }
     }
 
@@ -183,6 +186,65 @@ public class MapGenerator : MonoBehaviour
             ret++;
         }
         return ret;
+    }
+
+    public void GenerateWalls(float radius, Vector3 centerPoint, Quaternion instantiatedRotation)
+    {
+        // convert the rotation degrees to radians.
+        float radiansMultiplier = ((float)System.Math.PI) / 180;
+
+        float xStart = centerPoint.x + radius;
+        float yStart = centerPoint.y;
+
+        GameObject firstRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xStart, yStart, centerPoint.z), instantiatedRotation);
+        _roomWalls.Add(firstRoomTile);
+
+        float currentAngle = 0;
+
+        while (currentAngle < 360)
+        {
+            float nextAngle = currentAngle + Random.Range(20, 90);
+
+            // no small edges, ensure degree difference is always greater than 20
+            if (360 - nextAngle < 20)
+            {
+                nextAngle = 360;
+            }
+
+            // define second point (rotated 1 iteration further).
+            float xNext = (float)(centerPoint.x + System.Math.Cos(nextAngle * radiansMultiplier) * radius);
+            float yNext = (float)(centerPoint.y + System.Math.Sin(nextAngle * radiansMultiplier) * radius);
+
+            // get relative distance between the two points.
+            float xDist = xNext - xStart;
+            float yDist = yNext - yStart;
+
+            //linearly interpolate X-wise (horizontally)
+            int xMultiplier = xDist > 0 ? 1 : -1;
+            xDist = System.Math.Abs(xDist);
+            for (int i = 0; i < System.Math.Round(xDist / xSize); i++)
+            {
+                GameObject horizontalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xStart + (xMultiplier * i * xSize), yStart, centerPoint.z), instantiatedRotation);
+                float xTemp = xStart + (xMultiplier * i * xSize);
+                _roomWalls.Add(horizontalRoomTile);
+            }
+
+            float xFinal = xStart + (xMultiplier * (float)System.Math.Round(xDist / xSize) * xSize);
+
+            //linearly interpolate X-wise (horizontally)
+            int yMultiplier = yDist > 0 ? 1 : -1;
+            yDist = System.Math.Abs(yDist);
+            for (int i = 0; i < System.Math.Round(yDist / ySize); i++)
+            {
+                GameObject verticalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xFinal, yStart + (yMultiplier * i * ySize), centerPoint.z), instantiatedRotation);
+                float yTemp = yStart + (yMultiplier * i * ySize);
+                _roomWalls.Add(verticalRoomTile);
+            }
+            xStart = xStart + (xMultiplier * (float) System.Math.Round(xDist / xSize) * xSize);
+            yStart = yStart + (yMultiplier * (float) System.Math.Round(yDist / ySize) * ySize);
+            currentAngle = nextAngle;
+        }
+
     }
 
     // Update is called once per frame
