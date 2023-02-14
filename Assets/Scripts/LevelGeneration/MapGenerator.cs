@@ -18,7 +18,7 @@ public class MapGenerator : MonoBehaviour
     public Transform generatorPoint;
 
     public float xOffset = 18f, yOffset = 10f;
-    public float xSize, ySize;
+    private float xWallSize, yWallSize;
     public GameObject wallBlock;
     private List<GameObject> _roomWalls = new List<GameObject>();
     public LayerMask layerMask;
@@ -37,6 +37,8 @@ public class MapGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        xWallSize = wallBlock.GetComponent<BoxCollider2D>().size.x;
+        yWallSize = wallBlock.GetComponent<BoxCollider2D>().size.y;
         // Set number of rooms underneath the maximum rooms the grid can fit.
         if (numberOfRooms >= (worldSize.x * 2) * (worldSize.y * 2))
         { 
@@ -196,9 +198,6 @@ public class MapGenerator : MonoBehaviour
         float xStart = centerPoint.x + radius;
         float yStart = centerPoint.y;
 
-        GameObject firstRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xStart, yStart, centerPoint.z), instantiatedRotation);
-        _roomWalls.Add(firstRoomTile);
-
         float currentAngle = 0;
 
         while (currentAngle < 360)
@@ -222,26 +221,24 @@ public class MapGenerator : MonoBehaviour
             //linearly interpolate X-wise (horizontally)
             int xMultiplier = xDist > 0 ? 1 : -1;
             xDist = System.Math.Abs(xDist);
-            for (int i = 0; i < System.Math.Round(xDist / xSize); i++)
+            for (int i = 0; i < System.Math.Round(xDist / xWallSize); i++)
             {
-                GameObject horizontalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xStart + (xMultiplier * i * xSize), yStart, centerPoint.z), instantiatedRotation);
-                float xTemp = xStart + (xMultiplier * i * xSize);
+                GameObject horizontalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xStart + (xMultiplier * i * xWallSize), yStart, centerPoint.z), instantiatedRotation);
                 _roomWalls.Add(horizontalRoomTile);
             }
 
-            float xFinal = xStart + (xMultiplier * (float)System.Math.Round(xDist / xSize) * xSize);
+            float xFinal = xStart + (xMultiplier * (float)System.Math.Round(xDist / xWallSize) * xWallSize);
 
-            //linearly interpolate X-wise (horizontally)
+            //linearly interpolate Y-wise (vertically)
             int yMultiplier = yDist > 0 ? 1 : -1;
             yDist = System.Math.Abs(yDist);
-            for (int i = 0; i < System.Math.Round(yDist / ySize); i++)
+            for (int i = 0; i < System.Math.Round(yDist / yWallSize); i++)
             {
-                GameObject verticalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xFinal, yStart + (yMultiplier * i * ySize), centerPoint.z), instantiatedRotation);
-                float yTemp = yStart + (yMultiplier * i * ySize);
+                GameObject verticalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xFinal, yStart + (yMultiplier * i * yWallSize), centerPoint.z), instantiatedRotation);
                 _roomWalls.Add(verticalRoomTile);
             }
-            xStart = xStart + (xMultiplier * (float) System.Math.Round(xDist / xSize) * xSize);
-            yStart = yStart + (yMultiplier * (float) System.Math.Round(yDist / ySize) * ySize);
+            xStart = xFinal;
+            yStart += (yMultiplier * (float) System.Math.Round(yDist / yWallSize) * yWallSize);
             currentAngle = nextAngle;
         }
 
