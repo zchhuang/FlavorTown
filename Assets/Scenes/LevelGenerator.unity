@@ -159,8 +159,6 @@ MonoBehaviour:
   generatorPoint: {fileID: 871791061}
   xOffset: 18
   yOffset: 10
-  xSize: 0.2
-  ySize: 0.2
   wallBlock: {fileID: 1687180231502374461, guid: cdd7c62349798c640a479e030f16f674, type: 3}
   layerMask:
     serializedVersion: 2
@@ -229,7 +227,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &1502001225
 AudioListener:
   m_ObjectHideFlags: 0
