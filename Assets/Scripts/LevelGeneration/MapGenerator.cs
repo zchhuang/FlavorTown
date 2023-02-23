@@ -190,19 +190,40 @@ public class MapGenerator : MonoBehaviour
         return ret;
     }
 
-    public void GenerateWalls(float radius, Vector3 centerPoint, Quaternion instantiatedRotation)
+    /**
+     * Generates randomly shaped rooms by moving along the circumference of a circle by random angle increments. Interpolate
+     * between points by creating 2 edges (1 in the x direction, 1 in the y direction).
+     * 
+     * @param radius is the radius of the circle
+     * @param centerPoint is the center point of the circle
+     * @param instantiateRotation is the rotation in quaternion form of the bounding room (set to I in most cases)
+     * @param xEllipseRadius is the elliptical x-wise radius for rectangular rooms
+     * @param yEllipseRadius is the elliptical y-wise radius for rectangular rooms
+     */
+
+    public void GenerateWalls(float radius, Vector3 centerPoint, Quaternion instantiatedRotation, float xEllipseRadius = 0, float yEllipseRadius = 0)
     {
         // convert the rotation degrees to radians.
         float radiansMultiplier = ((float)System.Math.PI) / 180;
 
-        float xStart = centerPoint.x + radius;
-        float yStart = centerPoint.y;
+        float xStart, yStart;
+
+        if (xEllipseRadius != 0 && yEllipseRadius != 0)
+        {
+            xStart = centerPoint.x + xEllipseRadius;
+            yStart = centerPoint.y;
+        }
+        else
+        {
+            xStart = centerPoint.x + radius;
+            yStart = centerPoint.y;
+        }
 
         float currentAngle = 0;
 
         while (currentAngle < 360)
         {
-            float nextAngle = currentAngle + Random.Range(20, 90);
+            float nextAngle = currentAngle + Random.Range(20, 60);
 
             // no small edges, ensure degree difference is always greater than 20
             if (360 - nextAngle < 20)
@@ -210,9 +231,19 @@ public class MapGenerator : MonoBehaviour
                 nextAngle = 360;
             }
 
+            float xNext, yNext;
+
             // define second point (rotated 1 iteration further).
-            float xNext = (float)(centerPoint.x + System.Math.Cos(nextAngle * radiansMultiplier) * radius);
-            float yNext = (float)(centerPoint.y + System.Math.Sin(nextAngle * radiansMultiplier) * radius);
+            if (xEllipseRadius != 0 && yEllipseRadius != 0)
+            {
+                xNext = (float)(centerPoint.x + System.Math.Cos(nextAngle * radiansMultiplier) * xEllipseRadius);
+                yNext = (float)(centerPoint.y + System.Math.Sin(nextAngle * radiansMultiplier) * yEllipseRadius);
+            } else
+            {
+                xNext = (float)(centerPoint.x + System.Math.Cos(nextAngle * radiansMultiplier) * radius);
+                yNext = (float)(centerPoint.y + System.Math.Sin(nextAngle * radiansMultiplier) * radius);
+            }
+            
 
             // get relative distance between the two points.
             float xDist = xNext - xStart;
