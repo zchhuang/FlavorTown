@@ -9,7 +9,7 @@ public class MapGenerator : MonoBehaviour
     Room[,] map;
 
     List<Vector2> usedPositions = new List<Vector2>();
-    int gridSizeX, gridSizeY, fullGridSizeX, fullGridSizeY, numberOfRooms = 12;
+    int gridSizeX, gridSizeY, fullGridSizeX, fullGridSizeY, numberOfRooms = 10;
 
     public GameObject layoutRoom;
     public Color startColor, endColor;
@@ -18,7 +18,9 @@ public class MapGenerator : MonoBehaviour
     public Transform generatorPoint;
 
     public float xOffset = 18f, yOffset = 10f;
-
+    private float _xWallSize, _yWallSize;
+    public GameObject wallBlock;
+    private List<GameObject> _roomWalls = new List<GameObject>();
     public LayerMask layerMask;
 
     // private GameObject _startRoom;
@@ -35,6 +37,8 @@ public class MapGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        _xWallSize = wallBlock.GetComponent<BoxCollider2D>().size.x;
+        _yWallSize = wallBlock.GetComponent<BoxCollider2D>().size.y;
         // Set number of rooms underneath the maximum rooms the grid can fit.
         if (numberOfRooms >= (worldSize.x * 2) * (worldSize.y * 2))
         { 
@@ -98,6 +102,7 @@ public class MapGenerator : MonoBehaviour
             int posX = (int) drawPos.x, posY = (int) drawPos.y;
             Vector2 roomCoords = new Vector2(posX * xOffset, posY * yOffset); 
             Instantiate(layoutRoom, roomCoords, Quaternion.identity).GetComponent<SpriteRenderer>().color = startColor;
+            GenerateWalls((float) 3.0, roomCoords, Quaternion.identity);
         }
     }
 
@@ -183,6 +188,91 @@ public class MapGenerator : MonoBehaviour
             ret++;
         }
         return ret;
+    }
+
+    /**
+     * Generates randomly shaped rooms by moving along the circumference of a circle by random angle increments. Interpolate
+     * between points by creating 2 edges (1 in the x direction, 1 in the y direction).
+     * 
+     * @param radius is the radius of the circle
+     * @param centerPoint is the center point of the circle
+     * @param instantiateRotation is the rotation in quaternion form of the bounding room (set to I in most cases)
+     * @param xEllipseRadius is the elliptical x-wise radius for rectangular rooms
+     * @param yEllipseRadius is the elliptical y-wise radius for rectangular rooms
+     */
+
+    public void GenerateWalls(float radius, Vector3 centerPoint, Quaternion instantiatedRotation, float xEllipseRadius = 0, float yEllipseRadius = 0)
+    {
+        // convert the rotation degrees to radians.
+        float radiansMultiplier = ((float)System.Math.PI) / 180;
+
+        float xStart, yStart;
+
+        if (xEllipseRadius != 0 && yEllipseRadius != 0)
+        {
+            xStart = centerPoint.x + xEllipseRadius;
+            yStart = centerPoint.y;
+        }
+        else
+        {
+            xStart = centerPoint.x + radius;
+            yStart = centerPoint.y;
+        }
+
+        float currentAngle = 0;
+
+        while (currentAngle < 360)
+        {
+            float nextAngle = currentAngle + Random.Range(20, 60);
+
+            // no small edges, ensure degree difference is always greater than 20
+            if (360 - nextAngle < 20)
+            {
+                nextAngle = 360;
+            }
+
+            float xNext, yNext;
+
+            // define second point (rotated 1 iteration further).
+            if (xEllipseRadius != 0 && yEllipseRadius != 0)
+            {
+                xNext = (float)(centerPoint.x + System.Math.Cos(nextAngle * radiansMultiplier) * xEllipseRadius);
+                yNext = (float)(centerPoint.y + System.Math.Sin(nextAngle * radiansMultiplier) * yEllipseRadius);
+            } else
+            {
+                xNext = (float)(centerPoint.x + System.Math.Cos(nextAngle * radiansMultiplier) * radius);
+                yNext = (float)(centerPoint.y + System.Math.Sin(nextAngle * radiansMultiplier) * radius);
+            }
+            
+
+            // get relative distance between the two points.
+            float xDist = xNext - xStart;
+            float yDist = yNext - yStart;
+
+            //linearly interpolate X-wise (horizontally)
+            int xMultiplier = xDist > 0 ? 1 : -1;
+            xDist = System.Math.Abs(xDist);
+            for (int i = 0; i < System.Math.Round(xDist / _xWallSize); i++)
+            {
+                GameObject horizontalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xStart + (xMultiplier * i * _xWallSize), yStart, centerPoint.z), instantiatedRotation);
+                _roomWalls.Add(horizontalRoomTile);
+            }
+
+            float xFinal = xStart + (xMultiplier * (float)System.Math.Round(xDist / _xWallSize) * _xWallSize);
+
+            //linearly interpolate Y-wise (vertically)
+            int yMultiplier = yDist > 0 ? 1 : -1;
+            yDist = System.Math.Abs(yDist);
+            for (int i = 0; i < System.Math.Round(yDist / _yWallSize); i++)
+            {
+                GameObject verticalRoomTile = GameObject.Instantiate(wallBlock, new Vector3(xFinal, yStart + (yMultiplier * i * _yWallSize), centerPoint.z), instantiatedRotation);
+                _roomWalls.Add(verticalRoomTile);
+            }
+            xStart = xFinal;
+            yStart += (yMultiplier * (float) System.Math.Round(yDist / _yWallSize) * _yWallSize);
+            currentAngle = nextAngle;
+        }
+
     }
 
     // Update is called once per frame
