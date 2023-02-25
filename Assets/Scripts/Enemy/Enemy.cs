@@ -6,7 +6,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     public Rigidbody2D rigidBody;
-    
+
     // Movement Variables
     public float moveSpeed;
     private Vector3 _moveDirection;
@@ -54,4 +54,3 @@ public class Enemy : MonoBehaviour
         }
     }
 }
-
